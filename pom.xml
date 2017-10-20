@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threads</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threads</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/threads</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</conncetion>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-commons-threads.git</url>
     </scm>
 
     <build>
