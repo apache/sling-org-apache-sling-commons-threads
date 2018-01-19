@@ -111,6 +111,18 @@ public class DefaultThreadPool
             if (this.configuration.getQueueSize() > 0) {
                 queue = new java.util.concurrent.ArrayBlockingQueue<Runnable>(this.configuration.getQueueSize());
             } else {
+                // SLING-7407 : queue size is -1 (or negative) == unbounded
+                // in this case the max pool size wouldn't have any effect, since the
+                // pool is only increased (ie threads only created) when the queue is blocked
+                // but with an unbounded queue that never happens, thus you'd always get only
+                // maximum min queue size threads.
+                // To fix this somewhat odd behaviour, we now automatically set the min to max for this case:
+                if (this.configuration.getMinPoolSize() < this.configuration.getMaxPoolSize()) {
+                    this.logger.warn("min-pool-size (" + configuration.getMinPoolSize() + 
+                            ") < max-pool-size (" + configuration.getMaxPoolSize() + ") for pool \"" + this.name + 
+                            "\" which has unbounded queue (queue size -1). Set to " + configuration.getMaxPoolSize());
+                    this.configuration.setMinPoolSize(configuration.getMaxPoolSize());
+                }
                 queue = new LinkedBlockingQueue<Runnable>();
             }
         } else {
