@@ -118,7 +118,7 @@ public class DefaultThreadPool
                 // maximum min queue size threads.
                 // To fix this somewhat odd behaviour, we now automatically set the min to max for this case:
                 if (this.configuration.getMinPoolSize() < this.configuration.getMaxPoolSize()) {
-                    this.logger.warn("min-pool-size (" + configuration.getMinPoolSize() + 
+                    this.logger.info("min-pool-size (" + configuration.getMinPoolSize() + 
                             ") < max-pool-size (" + configuration.getMaxPoolSize() + ") for pool \"" + this.name + 
                             "\" which has unbounded queue (queue size -1). Set to " + configuration.getMaxPoolSize());
                     this.configuration.setMinPoolSize(configuration.getMaxPoolSize());
