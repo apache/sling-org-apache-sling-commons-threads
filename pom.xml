@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
-    <version>3.2.11-SNAPSHOT</version>
+    <version>3.2.12</version>
 
     <name>Apache Sling Thread Support</name>
     <description>
@@ -40,7 +40,8 @@
         <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</developerConnection>
         <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-commons-threads.git</url>
-    </scm>
+      <tag>org.apache.sling.commons.threads-3.2.12</tag>
+  </scm>
 
     <build>
         <plugins>
