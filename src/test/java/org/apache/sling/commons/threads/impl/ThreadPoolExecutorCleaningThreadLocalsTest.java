@@ -16,17 +16,21 @@
  */
 package org.apache.sling.commons.threads.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
+ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.commons.threads.impl.ThreadLocalChangeListener.Mode;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
@@ -51,6 +55,20 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
                     1, 1, 100, TimeUnit.MILLISECONDS,
                     queue, Executors.defaultThreadFactory(), rejectionHandler, listener);
     }
+    
+    @Test(timeout = 10000)
+    @Ignore
+    public void threadLocalCleanupWorksWithResize() throws Exception {
+        
+        // configure thread local counts to make sure that
+        // 1. the ThreadLocalMap is initialized with the default size
+        // 2. the ThreadLocalMap size is expanded
+        int[] tlcount = new int[] { 16, 32 };
+        for (int count : tlcount) {
+            Future<?> result = pool.submit(new RunnableImplementation(count));
+            result.get();
+        }
+    }
 
     @Test
     public void testThreadLocalBeingCleanedUp() throws InterruptedException, ExecutionException {
@@ -66,6 +84,31 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         ThreadLocalTask task = new ThreadLocalTask(value);
         pool.submit(task).get();
         Assert.assertNull(task.getOldValue());
+    }
+
+    private static class RunnableImplementation implements Runnable {
+        private final int threadLocalCount;
+        private final List<ThreadLocal<String>> threadLocals = new ArrayList<>();
+        
+        
+        public RunnableImplementation(int threadLocalCount) {
+            this.threadLocalCount = threadLocalCount;
+        }
+        
+        @Override
+        public void run() {
+            for ( int i = 0 ; i < threadLocalCount; i++) {
+                ThreadLocal<String> tl = new ThreadLocal<>();
+                tl.set("val");
+                
+                threadLocals.add(tl);
+            }
+
+            for ( ThreadLocal<String> tl : threadLocals ) {
+                String val = tl.get();
+                val.toString();
+            }
+        }
     }
 
     private static class ThreadLocalTask implements Runnable {
