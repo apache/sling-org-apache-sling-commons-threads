@@ -31,7 +31,7 @@ public class ThreadLocalCleaner {
 
     /* Reflection fields */
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
-    private static Field threadLocalsField;
+    private static volatile Field threadLocalsField;
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
     private static Field inheritableThreadLocalsField;
     private static Class<?> threadLocalMapClass;
@@ -45,11 +45,11 @@ public class ThreadLocalCleaner {
     private static Field threadLocalMapSizeField;
     /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and next resize threshold */
     private static Field threadLocalMapThresholdField;
-    private static IllegalStateException reflectionException;
+    private static volatile IllegalStateException reflectionException;
 
 
     public ThreadLocalCleaner(ThreadLocalChangeListener listener) {
-        if (threadLocalsField == null) {
+        if (threadLocalsField == null || reflectionException != null) {
             initReflectionFields();
         }
         this.listener = listener;
@@ -75,7 +75,7 @@ public class ThreadLocalCleaner {
             } catch (NoSuchFieldException e) {
                 reflectionException = new IllegalStateException(
                         "Could not locate threadLocals field in class Thread.  " +
-                                "Will not be able to clear thread locals: " + e);
+                                "Will not be able to clear thread locals: " + e, e);
                 throw reflectionException;
             }
         }
