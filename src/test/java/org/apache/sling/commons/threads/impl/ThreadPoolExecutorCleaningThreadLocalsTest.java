@@ -57,7 +57,6 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
     }
     
     @Test(timeout = 10000)
-    @Ignore
     public void threadLocalCleanupWorksWithResize() throws Exception {
         
         // configure thread local counts to make sure that

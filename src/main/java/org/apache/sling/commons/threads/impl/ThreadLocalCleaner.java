@@ -41,7 +41,12 @@ public class ThreadLocalCleaner {
     /** this field is in class {@code ThreadLocal.ThreadLocalMap.Entry} and contains an object referencing the actual thread local
      * variable */
     private static Field threadLocalEntryValueField;
+    /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and contains the number of the entries */
+    private static Field threadLocalMapSizeField;
+    /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and next resize threshold */
+    private static Field threadLocalMapThresholdField;
     private static IllegalStateException reflectionException;
+
 
     public ThreadLocalCleaner(ThreadLocalChangeListener listener) {
         if (threadLocalsField == null) {
@@ -65,6 +70,8 @@ public class ThreadLocalCleaner {
                 tableField = field(threadLocalMapClass, "table");
                 threadLocalMapEntryClass = inner(threadLocalMapClass, "Entry");
                 threadLocalEntryValueField = field(threadLocalMapEntryClass, "value");
+                threadLocalMapSizeField = field(threadLocalMapClass, "size");
+                threadLocalMapThresholdField = field(threadLocalMapClass, "threshold");
             } catch (NoSuchFieldException e) {
                 reflectionException = new IllegalStateException(
                         "Could not locate threadLocals field in class Thread.  " +
@@ -169,12 +176,19 @@ public class ThreadLocalCleaner {
     }
 
     private static final ThreadLocal<Reference<?>[]> copyOfThreadLocals = new ThreadLocal<>();
-
+    private static final ThreadLocal<Integer> copyOfThreadLocalsSize = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> copyOfThreadLocalsThreshold = new ThreadLocal<>();
     private static final ThreadLocal<Reference<?>[]> copyOfInheritableThreadLocals = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> copyOfInheritableThreadLocalsSize = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> copyOfInheritableThreadLocalsThreshold = new ThreadLocal<>();
 
     private static void saveOldThreadLocals() {
         copyOfThreadLocals.set(copy(threadLocalsField));
+        copyOfThreadLocalsSize.set(size(threadLocalsField, threadLocalMapSizeField));
+        copyOfThreadLocalsThreshold.set(size(threadLocalsField, threadLocalMapThresholdField));
         copyOfInheritableThreadLocals.set(copy(inheritableThreadLocalsField));
+        copyOfInheritableThreadLocalsSize.set(size(inheritableThreadLocalsField, threadLocalMapSizeField));
+        copyOfInheritableThreadLocalsThreshold.set(size(inheritableThreadLocalsField, threadLocalMapThresholdField));
     }
 
     private static Reference<?>[] copy(Field field) {
@@ -190,31 +204,43 @@ public class ThreadLocalCleaner {
         }
     }
 
+    private static Integer size(Field field, Field sizeField) {
+        try {
+            Thread thread = Thread.currentThread();
+            Object threadLocals = field.get(thread);
+            if (threadLocals == null)
+                return null;
+            return (Integer) sizeField.get(threadLocals);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Access denied", e);
+        }
+    }
+
     private static void restoreOldThreadLocals() {
         try {
-            restore(inheritableThreadLocalsField, copyOfInheritableThreadLocals.get());
-            restore(threadLocalsField, copyOfThreadLocals.get());
+            restore(inheritableThreadLocalsField, copyOfInheritableThreadLocals.get(),
+                copyOfInheritableThreadLocalsSize.get(), copyOfInheritableThreadLocalsThreshold.get());
+            restore(threadLocalsField, copyOfThreadLocals.get(),
+                copyOfThreadLocalsSize.get(), copyOfThreadLocalsThreshold.get());
         } finally {
             copyOfThreadLocals.remove();
             copyOfInheritableThreadLocals.remove();
         }
     }
 
-    private static void restore(Field field, Object value) {
+    private static void restore(Field field, Object value, Integer size, Integer threshold) {
         try {
             Thread thread = Thread.currentThread();
             if (value == null) {
                 field.set(thread, null);
             } else {
-                tableField.set(field.get(thread), value);
+                final Object threadLocals = field.get(thread);
+                tableField.set(threadLocals, value);
+                threadLocalMapSizeField.set(threadLocals, size);
+                threadLocalMapThresholdField.set(threadLocals, threshold);
             }
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Access denied", e);
         }
-    }
-
-    static {
-        // TODO: move to a place where the exception can be caught!
-
     }
 }
