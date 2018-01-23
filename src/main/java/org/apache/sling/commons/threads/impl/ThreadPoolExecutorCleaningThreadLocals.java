@@ -52,14 +52,22 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
 
     protected void beforeExecute(Thread t, Runnable r) {
         LOGGER.debug("Collecting changes to ThreadLocal for thread {} from now on...", t);
-        ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
-        local.set(cleaner);
+        try {
+            ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
+            local.set(cleaner);
+        } catch (Throwable e) {
+            LOGGER.warn("Could not set up thread local cleaner (most probably not a compliant JRE): {}", e, e);
+        }
     }
 
     protected void afterExecute(Runnable r, Throwable t) {
         LOGGER.debug("Cleaning up thread locals for thread {}...", Thread.currentThread());
         ThreadLocalCleaner cleaner = local.get();
+        if (cleaner != null) {
+            cleaner.cleanup();
+        } else {
+            LOGGER.warn("Could not clean up thread locals in thread {} as the cleaner was not set up correctly", Thread.currentThread());
+        }
         local.remove();
-        cleaner.cleanup();
     }
 }
