@@ -18,6 +18,8 @@ package org.apache.sling.commons.threads.impl;
 
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,6 +37,8 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private final ConcurrentMap<Thread, ThreadLocalCleaner> cleaners = new ConcurrentHashMap<>();
+    
     public ThreadPoolExecutorCleaningThreadLocals(int corePoolSize,
             int maximumPoolSize,
             long keepAliveTime,
@@ -48,26 +52,28 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
         this.listener = listener;
     }
 
-    private static final ThreadLocal<ThreadLocalCleaner> local = new ThreadLocal<>();
-
     protected void beforeExecute(Thread t, Runnable r) {
         LOGGER.debug("Collecting changes to ThreadLocal for thread {} from now on...", t);
         try {
             ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
-            local.set(cleaner);
+            cleaners.put(t, cleaner);
         } catch (Throwable e) {
             LOGGER.warn("Could not set up thread local cleaner (most probably not a compliant JRE): {}", e, e);
         }
+        
+        super.beforeExecute(t, r);
     }
 
     protected void afterExecute(Runnable r, Throwable t) {
+        super.afterExecute(r, t);
+        
         LOGGER.debug("Cleaning up thread locals for thread {}...", Thread.currentThread());
-        ThreadLocalCleaner cleaner = local.get();
+        ThreadLocalCleaner cleaner = cleaners.remove(Thread.currentThread());
+
         if (cleaner != null) {
             cleaner.cleanup();
         } else {
             LOGGER.warn("Could not clean up thread locals in thread {} as the cleaner was not set up correctly", Thread.currentThread());
         }
-        local.remove();
     }
 }
