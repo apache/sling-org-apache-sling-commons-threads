@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import org.apache.sling.commons.threads.impl.ThreadLocalChangeListener.Mode;
+import org.slf4j.Logger;
 
 /** Notifies a {@link ThreadLocalChangeListener} about changes on a thread local storage. In addition it removes all references to variables
  * being added to the thread local storage while the cleaner was running with its {@link cleanup} method.
@@ -46,7 +47,6 @@ public class ThreadLocalCleaner {
     /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and next resize threshold */
     private static Field threadLocalMapThresholdField;
     private static volatile IllegalStateException reflectionException;
-
 
     public ThreadLocalCleaner(ThreadLocalChangeListener listener) {
         if (threadLocalsField == null || reflectionException != null) {
@@ -75,16 +75,40 @@ public class ThreadLocalCleaner {
             } catch (NoSuchFieldException e) {
                 reflectionException = new IllegalStateException(
                         "Could not locate threadLocals field in class Thread.  " +
-                                "Will not be able to clear thread locals: " + e, e);
+                                "Will not be able to clear thread locals: " + e,
+                        e);
                 throw reflectionException;
             }
         }
     }
 
+    /** This is only for debugging purposes. Gives out all thread locals bound to the current thread to the logger.
+     * 
+     * @param log
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException */
+    void dump(Logger log) {
+        Thread thread = Thread.currentThread();
+        Object threadLocals;
+        try {
+            threadLocals = threadLocalsField.get(thread);
+            Reference<?>[] currentReferences = (Reference<?>[]) tableField.get(threadLocals);
+            int size = (int) threadLocalMapSizeField.get(threadLocals);
+            log.info("Found  {} thread locals bound to thread {}", size, thread);
+            for (Reference<?> curRef : currentReferences) {
+                if (curRef != null) {
+                    log.info("Found reference {} with value {}", (ThreadLocal<?>) curRef.get(), threadLocalEntryValueField.get(curRef));
+                }
+            }
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            log.error("Can not dump thread locals for thread {}: {}", thread, e, e);
+        }
+    }
+
     public void cleanup() {
         // the first two diff calls are only to notify the listener, the actual cleanup is done by restoreOldThreadLocals
-        diff(threadLocalsField, copyOfThreadLocals.get());
-        diff(inheritableThreadLocalsField, copyOfInheritableThreadLocals.get());
+        diff(threadLocalsField, copyOfThreadLocals);
+        diff(inheritableThreadLocalsField, copyOfInheritableThreadLocals);
         restoreOldThreadLocals();
     }
 
@@ -175,20 +199,20 @@ public class ThreadLocalCleaner {
                 "Could not find inner class " + name + " in " + clazz);
     }
 
-    private static final ThreadLocal<Reference<?>[]> copyOfThreadLocals = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> copyOfThreadLocalsSize = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> copyOfThreadLocalsThreshold = new ThreadLocal<>();
-    private static final ThreadLocal<Reference<?>[]> copyOfInheritableThreadLocals = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> copyOfInheritableThreadLocalsSize = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> copyOfInheritableThreadLocalsThreshold = new ThreadLocal<>();
+    private Reference<?>[] copyOfThreadLocals;
+    private Integer copyOfThreadLocalsSize;
+    private Integer copyOfThreadLocalsThreshold;
+    private Reference<?>[] copyOfInheritableThreadLocals;
+    private Integer copyOfInheritableThreadLocalsSize;
+    private Integer copyOfInheritableThreadLocalsThreshold;
 
-    private static void saveOldThreadLocals() {
-        copyOfThreadLocals.set(copy(threadLocalsField));
-        copyOfThreadLocalsSize.set(size(threadLocalsField, threadLocalMapSizeField));
-        copyOfThreadLocalsThreshold.set(size(threadLocalsField, threadLocalMapThresholdField));
-        copyOfInheritableThreadLocals.set(copy(inheritableThreadLocalsField));
-        copyOfInheritableThreadLocalsSize.set(size(inheritableThreadLocalsField, threadLocalMapSizeField));
-        copyOfInheritableThreadLocalsThreshold.set(size(inheritableThreadLocalsField, threadLocalMapThresholdField));
+    private void saveOldThreadLocals() {
+        copyOfThreadLocals = copy(threadLocalsField);
+        copyOfThreadLocalsSize = size(threadLocalsField, threadLocalMapSizeField);
+        copyOfThreadLocalsThreshold = size(threadLocalsField, threadLocalMapThresholdField);
+        copyOfInheritableThreadLocals = copy(inheritableThreadLocalsField);
+        copyOfInheritableThreadLocalsSize = size(inheritableThreadLocalsField, threadLocalMapSizeField);
+        copyOfInheritableThreadLocalsThreshold = size(inheritableThreadLocalsField, threadLocalMapThresholdField);
     }
 
     private static Reference<?>[] copy(Field field) {
@@ -216,15 +240,14 @@ public class ThreadLocalCleaner {
         }
     }
 
-    private static void restoreOldThreadLocals() {
+    private void restoreOldThreadLocals() {
         try {
-            restore(inheritableThreadLocalsField, copyOfInheritableThreadLocals.get(),
-                copyOfInheritableThreadLocalsSize.get(), copyOfInheritableThreadLocalsThreshold.get());
-            restore(threadLocalsField, copyOfThreadLocals.get(),
-                copyOfThreadLocalsSize.get(), copyOfThreadLocalsThreshold.get());
+            restore(inheritableThreadLocalsField, copyOfInheritableThreadLocals,
+                    copyOfInheritableThreadLocalsSize, copyOfInheritableThreadLocalsThreshold);
+            restore(threadLocalsField, copyOfThreadLocals,
+                    copyOfThreadLocalsSize, copyOfThreadLocalsThreshold);
         } finally {
-            copyOfThreadLocals.remove();
-            copyOfInheritableThreadLocals.remove();
+
         }
     }
 

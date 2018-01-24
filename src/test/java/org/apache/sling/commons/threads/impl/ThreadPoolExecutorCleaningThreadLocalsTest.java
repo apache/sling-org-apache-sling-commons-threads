@@ -24,13 +24,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
- import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.commons.threads.impl.ThreadLocalChangeListener.Mode;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
@@ -55,7 +54,7 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
                     1, 1, 100, TimeUnit.MILLISECONDS,
                     queue, Executors.defaultThreadFactory(), rejectionHandler, listener);
     }
-    
+
     @Test(timeout = 10000)
     public void threadLocalCleanupWorksWithResize() throws Exception {
         
@@ -82,6 +81,8 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
     private void assertTaskDoesNotSeeOldThreadLocals(String value) throws InterruptedException, ExecutionException {
         ThreadLocalTask task = new ThreadLocalTask(value);
         pool.submit(task).get();
+        // when get returns the task may not have been cleaned up (i.e. afterExecute() was no necessarily executed), therefore wait a littlebit here
+        Thread.sleep(500);
         Assert.assertNull(task.getOldValue());
     }
 
