@@ -32,48 +32,38 @@ public class ThreadLocalCleaner {
     
     private static final Logger LOG = LoggerFactory.getLogger(ThreadLocalCleaner.class);
     
-    private final ThreadLocalChangeListener listener;
-
     /* Reflection fields */
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
-    private static volatile Field threadLocalsField;
+    private static final Field threadLocalsField;
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
-    private static Field inheritableThreadLocalsField;
-    private static Class<?> threadLocalMapClass;
+    private static final Field inheritableThreadLocalsField;
+    private static final Class<?> threadLocalMapClass;
     /** this field is in class {@code ThreadLocal.ThreadLocalMap} and contains an array of {@code ThreadLocal.ThreadLocalMap.Entry's} */
-    private static Field tableField;
-    private static Class<?> threadLocalMapEntryClass;
+    private static final Field tableField;
+    private static final Class<?> threadLocalMapEntryClass;
     /** this field is in class {@code ThreadLocal.ThreadLocalMap.Entry} and contains an object referencing the actual thread local
      * variable */
-    private static Field threadLocalEntryValueField;
+    private static final Field threadLocalEntryValueField;
     /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and contains the number of the entries */
-    private static Field threadLocalMapSizeField;
+    private static final Field threadLocalMapSizeField;
     /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and next resize threshold */
-    private static Field threadLocalMapThresholdField;
-    private static volatile IllegalStateException reflectionException;
+    private static final Field threadLocalMapThresholdField;
 
-    private static synchronized void initReflectionFields() throws IllegalStateException {
-        // check if previous initialization lead to an exception
-        if (reflectionException != null) {
-            throw reflectionException;
-        }
-        // check if initialized
-        if (threadLocalsField == null) {
-            try {
-                threadLocalsField = field(Thread.class, "threadLocals");
-                inheritableThreadLocalsField = field(Thread.class, "inheritableThreadLocals");
-                threadLocalMapClass = inner(ThreadLocal.class, "ThreadLocalMap");
-                tableField = field(threadLocalMapClass, "table");
-                threadLocalMapEntryClass = inner(threadLocalMapClass, "Entry");
-                threadLocalEntryValueField = field(threadLocalMapEntryClass, "value");
-                threadLocalMapSizeField = field(threadLocalMapClass, "size");
-                threadLocalMapThresholdField = field(threadLocalMapClass, "threshold");
-            } catch (NoSuchFieldException e) {
-                reflectionException = new IllegalStateException(
-                        "Could not locate threadLocals field in class Thread.  " +
-                                "Will not be able to clear thread locals: " + e, e);
-                throw reflectionException;
-            }
+    static  {
+        try {
+            threadLocalsField = field(Thread.class, "threadLocals");
+            inheritableThreadLocalsField = field(Thread.class, "inheritableThreadLocals");
+            threadLocalMapClass = inner(ThreadLocal.class, "ThreadLocalMap");
+            tableField = field(threadLocalMapClass, "table");
+            threadLocalMapEntryClass = inner(threadLocalMapClass, "Entry");
+            threadLocalEntryValueField = field(threadLocalMapEntryClass, "value");
+            threadLocalMapSizeField = field(threadLocalMapClass, "size");
+            threadLocalMapThresholdField = field(threadLocalMapClass, "threshold");
+        } catch (NoSuchFieldException e) {
+            ExceptionInInitializerError error = new ExceptionInInitializerError(
+                    "Unable to access ThreadLocal class information using reflection");
+            error.initCause(e);
+            throw error;
         }
     }
     
@@ -125,10 +115,7 @@ public class ThreadLocalCleaner {
             throw new IllegalStateException("Access denied", e);
         }
     }
-    
-    private ThreadLocalMapCopy threadLocalsCopy;
-    private ThreadLocalMapCopy inheritableThreadLocalsCopy;
-    
+
     private static void restore(Field field, Object[] value, Integer size, Integer threshold) {
         try {
             Thread thread = Thread.currentThread();
@@ -146,11 +133,12 @@ public class ThreadLocalCleaner {
             throw new IllegalStateException("Access denied", e);
         }
     }
+
+    private final ThreadLocalChangeListener listener;
+    private ThreadLocalMapCopy threadLocalsCopy;
+    private ThreadLocalMapCopy inheritableThreadLocalsCopy;
     
     public ThreadLocalCleaner(ThreadLocalChangeListener listener) {
-        if (threadLocalsField == null || reflectionException != null) {
-            initReflectionFields();
-        }
         this.listener = listener;
         saveOldThreadLocals();
     }
