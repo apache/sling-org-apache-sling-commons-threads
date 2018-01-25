@@ -57,8 +57,9 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
         try {
             ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
             cleaners.put(t, cleaner);
-        } catch (Throwable e) {
+        } catch (RuntimeException | Error e) {
             LOGGER.warn("Could not set up thread local cleaner (most probably not a compliant JRE): {}", e, e);
+            throw e;
         }
         
         super.beforeExecute(t, r);
