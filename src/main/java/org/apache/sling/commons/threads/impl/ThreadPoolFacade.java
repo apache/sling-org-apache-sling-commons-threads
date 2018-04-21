@@ -26,7 +26,7 @@ import org.apache.sling.commons.threads.ThreadPoolConfig;
 
 /**
  * This is a facade which is delivered to clients. It allows
- * to change the thread pool behind the facacde without affecting
+ * to change the thread pool behind the facade without affecting
  * the client.
  */
 public final class ThreadPoolFacade implements ThreadPool {
