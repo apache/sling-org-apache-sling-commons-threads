@@ -169,7 +169,8 @@ public class DefaultThreadPool
     private static class LoggingThreadLocalChangeListener implements ThreadLocalChangeListener {
         @Override
         public void changed(Mode mode, Thread thread, ThreadLocal<?> threadLocal, Object value) {
-            LOGGER.debug("Thread '{}' {} ThreadLocal {} with value {}", thread, mode, threadLocal.getClass(), value);
+            LOGGER.debug("Thread '{}' {} ThreadLocal {} with value {}", thread, mode, 
+                    threadLocal != null ? threadLocal.getClass() : "<null>", value);
         }
     }
 

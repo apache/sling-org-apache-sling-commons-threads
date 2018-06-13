@@ -28,6 +28,16 @@ public interface ThreadLocalChangeListener {
 
     Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    /**
+     * Invoked when the cleaner detects that a thread-local value was added of removed 
+     * after an execution has completed
+     * 
+     * @param the mode
+     * @param the thread
+     * @param the thread local, possibly null
+     * @param the value, possibly null
+     */
+    
     void changed(Mode mode, Thread thread, ThreadLocal<?> threadLocal, Object value);
 
     enum Mode {
