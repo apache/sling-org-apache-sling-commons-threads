@@ -172,6 +172,11 @@ public class DefaultThreadPool
             LOGGER.debug("Thread '{}' {} ThreadLocal {} with value {}", thread, mode, 
                     threadLocal != null ? threadLocal.getClass() : "<null>", value);
         }
+        
+        @Override
+        public boolean isEnabled() {
+            return LOGGER.isDebugEnabled();
+        }
     }
 
     /**

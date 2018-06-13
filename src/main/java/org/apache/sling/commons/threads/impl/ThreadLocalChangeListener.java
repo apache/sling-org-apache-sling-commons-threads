@@ -39,6 +39,8 @@ public interface ThreadLocalChangeListener {
      */
     
     void changed(Mode mode, Thread thread, ThreadLocal<?> threadLocal, Object value);
+    
+    boolean isEnabled();
 
     enum Mode {
         ADDED, REMOVED

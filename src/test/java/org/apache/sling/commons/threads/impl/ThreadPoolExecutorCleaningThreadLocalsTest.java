@@ -54,6 +54,7 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         pool = new ThreadPoolExecutorCleaningThreadLocals(
                     1, 1, 100, TimeUnit.MILLISECONDS,
                     queue, Executors.defaultThreadFactory(), rejectionHandler, listener);
+        Mockito.when(listener.isEnabled()).thenReturn(true);
     }
     
     @Test(timeout = 10000)

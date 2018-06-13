@@ -145,8 +145,10 @@ public class ThreadLocalCleaner {
 
     public void cleanup() {
         // the first two diff calls are only to notify the listener, the actual cleanup is done by restoreOldThreadLocals
-        diff(threadLocalsField, threadLocalsCopy.references);
-        diff(inheritableThreadLocalsField, inheritableThreadLocalsCopy.references);
+        if ( listener.isEnabled() ) {
+            diff(threadLocalsField, threadLocalsCopy.references);
+            diff(inheritableThreadLocalsField, inheritableThreadLocalsCopy.references);
+        }
         restoreOldThreadLocals();
     }
 
