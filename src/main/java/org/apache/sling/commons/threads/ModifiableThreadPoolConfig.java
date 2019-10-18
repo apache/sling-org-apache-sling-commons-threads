@@ -19,7 +19,6 @@ package org.apache.sling.commons.threads;
 import org.osgi.annotation.versioning.ProviderType;
 
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This is a modifiable thread pool configuration that can be instantiated
