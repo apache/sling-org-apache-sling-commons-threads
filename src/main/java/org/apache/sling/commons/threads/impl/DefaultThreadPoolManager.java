@@ -19,10 +19,13 @@ package org.apache.sling.commons.threads.impl;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.sling.commons.metrics.Gauge;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -78,7 +81,7 @@ public class DefaultThreadPoolManager
             this.pools.clear();
         }
         for (final Entry entry : localCopy.values()) {
-            entry.unregisterMBean();
+            entry.unregisterMBeanAndMetrics();
             entry.shutdown();
         }
         this.logger.info("Stopped Apache Sling Thread Pool Manager");
@@ -140,7 +143,7 @@ public class DefaultThreadPoolManager
             threadPool = entry.incUsage();
         }
         if (created) {
-            entry.registerMBean();
+            entry.registerMBeanAndMetrics();
         }
         return threadPool;
     }
@@ -162,7 +165,7 @@ public class DefaultThreadPoolManager
                 }
             }
             if ( removedEntry != null ) {
-                removedEntry.unregisterMBean();
+                removedEntry.unregisterMBeanAndMetrics();
             }
         }
 
@@ -200,7 +203,7 @@ public class DefaultThreadPoolManager
             this.pools.put(name, entry);
             threadPool = entry.incUsage();
         }
-        entry.registerMBean();
+        entry.registerMBeanAndMetrics();
         return threadPool;
     }
 
@@ -268,7 +271,7 @@ public class DefaultThreadPoolManager
             }
         }
         if ( createdEntry != null ) {
-            createdEntry.registerMBean(); 
+            createdEntry.registerMBeanAndMetrics();
         }
     }
 
@@ -301,6 +304,13 @@ public class DefaultThreadPoolManager
     }
 
     protected static final class Entry {
+
+        private static final String METRICS_PREFIX = "commons.threads.tp";
+
+        private static final String METRICS_SEPARATOR = ".";
+
+        private static final String METRICS_THREADPOOL_NAME_REPLACEMENT_CHAR = "-";
+
         private static final Logger logger = LoggerFactory.getLogger(Entry.class);
 
         /** The configuration pid. (might be null for anonymous pools.*/
@@ -319,6 +329,9 @@ public class DefaultThreadPoolManager
         private volatile ThreadPoolFacade pool;
 
         private ServiceRegistration mbeanRegistration;
+
+        @SuppressWarnings("rawtypes")
+        private final List<ServiceRegistration<Gauge>> gaugeRegistrations = new LinkedList<>();
 
         private BundleContext bundleContext;
 
@@ -389,6 +402,14 @@ public class DefaultThreadPoolManager
             return this.name;
         }
 
+        private String getMetricFullName(String metricLocalName) {
+            return METRICS_PREFIX
+                    + METRICS_SEPARATOR
+                    + getName().toLowerCase().replaceAll("\\W", METRICS_THREADPOOL_NAME_REPLACEMENT_CHAR)
+                    + METRICS_SEPARATOR
+                    + metricLocalName;
+        }
+
         public boolean isUsed() {
             return this.count > 0;
         }
@@ -404,23 +425,51 @@ public class DefaultThreadPoolManager
             return null;
         }
 
-        protected void unregisterMBean() {
+        protected void unregisterMBeanAndMetrics() {
             if ( this.mbeanRegistration != null ) {
                 this.mbeanRegistration.unregister();
                 this.mbeanRegistration = null;
             }
+            unregisterGauges();
         }
 
-        protected void registerMBean() {
+        protected void registerMBeanAndMetrics() {
             try {
-                final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+                final Dictionary<String, String> mbeanProps = new Hashtable<>();
                 mbeanProps.put("jmx.objectname", "org.apache.sling:type=threads,service=ThreadPool,name=" + this.name);
 
                 final ThreadPoolMBeanImpl mbean = new ThreadPoolMBeanImpl(this);
                 this.mbeanRegistration = bundleContext.registerService(ThreadPoolMBean.class.getName(), mbean, mbeanProps);
-            } catch (Throwable t) {
-                logger.warn("Unable to register Thread Pool MBean", t);
+
+                for(Map.Entry<String, Gauge<?>> nameToGauge : ThreadPoolMetricsGauges.create(mbean).entrySet()) {
+                    addGauge(nameToGauge.getKey(), nameToGauge.getValue());
+                }
+            } catch (Exception e) {
+                logger.warn("Unable to register Thread Pool MBean", e);
             }
         }
+
+        private void addGauge(String name, Gauge<?> gauge) {
+            final String fullName = getMetricFullName(name);
+            final Dictionary<String, String> props = new Hashtable<>();
+            props.put(Gauge.NAME, fullName);
+            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Metrics Gauge - " + fullName);
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+
+            try {
+                gaugeRegistrations.add(bundleContext.registerService(Gauge.class, gauge, props));
+            } catch (IllegalStateException e) {
+                logger.warn("Unable to register Metrics Gauge - {}", fullName, e);
+            }
+        }
+
+        @SuppressWarnings("rawtypes")
+        private void unregisterGauges() {
+            for(ServiceRegistration<Gauge> reg: gaugeRegistrations) {
+                reg.unregister();
+            }
+            gaugeRegistrations.clear();
+        }
+
     }
 }
