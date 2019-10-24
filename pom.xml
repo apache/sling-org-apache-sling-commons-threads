@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>3.2.19-SNAPSHOT</version>
 
-    <name>Apache Sling Thread Support</name>
+    <name>Apache Sling Commons Threads</name>
     <description>
         Support for thread handling like pooling.
     </description>
