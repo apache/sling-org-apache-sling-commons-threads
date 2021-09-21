@@ -67,6 +67,15 @@ public class ThreadLocalCleaner {
         }
     }
     
+    static void validate() {
+        LOG.info("Validating reflective access is permitted... ");
+        Reference<?>[] threadLocals = copy(threadLocalsField);
+        if ( threadLocals == null )
+            LOG.info("Accessed thread locals of current thread, found none");
+        else
+            LOG.info("Accessed thread locals of current thread, found {}", threadLocals.length);
+    }
+
     /** @param c the class containing the field
      * @param name the name of the field
      * @return the field from the given class with the given name (made accessible)
