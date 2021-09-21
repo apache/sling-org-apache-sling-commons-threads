@@ -49,19 +49,14 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
             ThreadLocalChangeListener listener) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, 
                 workQueue, threadFactory, handler);
+        ThreadLocalCleaner.validate();
         this.listener = listener;
     }
 
     protected void beforeExecute(Thread t, Runnable r) {
         LOGGER.debug("Collecting changes to ThreadLocal for thread {} from now on...", t);
-        try {
-            ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
-            cleaners.put(t, cleaner);
-        } catch (RuntimeException | Error e) {
-            LOGGER.warn("Could not set up thread local cleaner (most probably not a compliant JRE): {}", e, e);
-            throw e;
-        }
-        
+        ThreadLocalCleaner cleaner = new ThreadLocalCleaner(listener);
+        cleaners.put(t, cleaner);
         super.beforeExecute(t, r);
     }
 

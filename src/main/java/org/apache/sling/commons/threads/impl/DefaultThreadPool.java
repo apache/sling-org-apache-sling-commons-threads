@@ -153,7 +153,7 @@ public class DefaultThreadPool
                     threadFactory,
                     handler,
                     new LoggingThreadLocalChangeListener());
-        } catch (IllegalStateException e) {
+        } catch (RuntimeException | Error e) {
             logger.warn("Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '{}', fall back to regular ThreadPoolExecutor", e.getMessage(), e);
             this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
                     this.configuration.getMaxPoolSize(),
