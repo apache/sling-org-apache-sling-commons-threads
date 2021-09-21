@@ -69,7 +69,7 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         }
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testThreadLocalBeingCleanedUp() throws InterruptedException, ExecutionException {
         assertTaskDoesNotSeeOldThreadLocals("test");
         assertTaskDoesNotSeeOldThreadLocals("test2");
