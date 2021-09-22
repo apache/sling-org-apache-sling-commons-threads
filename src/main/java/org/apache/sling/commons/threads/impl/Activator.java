@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -31,6 +32,7 @@ import org.osgi.service.cm.ManagedServiceFactory;
 /**
  * This activator registers the thread pool manager.
  */
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
     /** The service registration for the thread pool manager. */
