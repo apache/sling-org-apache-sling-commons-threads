@@ -22,13 +22,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>32</version>
+        <artifactId>sling-bundle-parent</artifactId>
+        <version>45</version>
         <relativePath />
     </parent>
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
-    <packaging>bundle</packaging>
     <version>3.2.23-SNAPSHOT</version>
 
     <name>Apache Sling Commons Threads</name>
@@ -45,22 +44,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Bundle-Activator>
-                            org.apache.sling.commons.threads.impl.Activator
-                        </Bundle-Activator>
-                        <Provide-Capability>
-                            osgi.service;objectClass=org.apache.sling.commons.threads.ThreadPoolManager,
-                            osgi.service;objectClass=org.apache.sling.commons.threads.jmx.ThreadPoolMBean
-                        </Provide-Capability>
-                    </instructions>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -80,6 +63,14 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.cmpn</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.versioning</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.bundle</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -105,4 +96,9 @@
             <version>1.2.6</version>
         </dependency>
     </dependencies>
+
+    <properties>
+        <sling.java.version>8</sling.java.version>
+        <project.build.outputTimestamp>2021-08-06T09:01:40Z</project.build.outputTimestamp>
+    </properties>
 </project>
