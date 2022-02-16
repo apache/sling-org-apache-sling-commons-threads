@@ -1,2 +1,4 @@
 Provide-Capability: osgi.service;objectClass=org.apache.sling.commons.threads.ThreadPoolManager,\
     osgi.service;objectClass=org.apache.sling.commons.threads.jmx.ThreadPoolMBean
+
+-jpms-module-info:
