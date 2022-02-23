@@ -46,10 +46,70 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
-                    <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                    <toolchains>
+                        <jdk>
+                            <version>1.8</version>
+                        </jdk>
+                        <jdk>
+                            <version>11</version>
+                        </jdk>
+                        <jdk>
+                            <version>17</version>
+                        </jdk>
+                    </toolchains>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <executions>
+                    <execution>
+                        <id>8</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <jdkToolchain>
+                                <version>1.8</version>
+                            </jdkToolchain>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>11</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                            <jdkToolchain>
+                                <version>11</version>
+                            </jdkToolchain>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>17</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                            <jdkToolchain>
+                                <version>17</version>
+                            </jdkToolchain>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
