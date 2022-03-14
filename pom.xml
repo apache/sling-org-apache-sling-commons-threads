@@ -42,75 +42,110 @@
       <tag>HEAD</tag>
   </scm>
 
+    <profiles>
+        <profile>
+            <id>non-ci</id>
+            <!-- enabled during non-ci/local builds, requires Java 9 for JPMS support -->
+            <activation>
+                <property>
+                    <name>!ci</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>ci</id>
+            <!-- enabled during ci builds -->
+            <activation>
+                <property>
+                    <name>ci</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-toolchains-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>toolchain</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <toolchains>
+                                <jdk>
+                                    <version>1.8</version>
+                                </jdk>
+                                <jdk>
+                                    <version>11</version>
+                                </jdk>
+                                <jdk>
+                                    <version>17</version>
+                                </jdk>
+                            </toolchains>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <jdkToolchain>
+                                        <version>1.8</version>
+                                    </jdkToolchain>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>11</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                                    <jdkToolchain>
+                                        <version>11</version>
+                                    </jdkToolchain>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>17</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
+                                    <jdkToolchain>
+                                        <version>17</version>
+                                    </jdkToolchain>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-toolchains-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>toolchain</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <toolchains>
-                        <jdk>
-                            <version>1.8</version>
-                        </jdk>
-                        <jdk>
-                            <version>11</version>
-                        </jdk>
-                        <jdk>
-                            <version>17</version>
-                        </jdk>
-                    </toolchains>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <executions>
-                    <execution>
-                        <id>default-test</id>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <jdkToolchain>
-                                <version>1.8</version>
-                            </jdkToolchain>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>11</id>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
-                            <jdkToolchain>
-                                <version>11</version>
-                            </jdkToolchain>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>17</id>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <argLine>--add-opens java.base/java.lang=org.apache.sling.commons.threads</argLine>
-                            <jdkToolchain>
-                                <version>17</version>
-                            </jdkToolchain>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -167,6 +202,7 @@
 
     <properties>
         <sling.java.version>8</sling.java.version>
+        <minimalJavaBuildVersion>9</minimalJavaBuildVersion>
         <project.build.outputTimestamp>2021-08-06T09:01:40Z</project.build.outputTimestamp>
     </properties>
 </project>
