@@ -47,9 +47,7 @@
             <id>non-ci</id>
             <!-- enabled during non-ci/local builds, requires Java 9 for JPMS support -->
             <activation>
-                <property>
-                    <name>!ci</name>
-                </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <build>
                 <plugins>
