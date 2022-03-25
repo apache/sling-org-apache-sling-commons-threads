@@ -106,6 +106,15 @@
                                     <goal>test</goal>
                                 </goals>
                                 <configuration>
+                                    <skip>true</skip>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>8</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
                                     <jdkToolchain>
                                         <version>1.8</version>
                                     </jdkToolchain>
