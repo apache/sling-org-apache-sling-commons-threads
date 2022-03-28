@@ -130,13 +130,13 @@ public class ThreadLocalCleaner {
             Thread thread = Thread.currentThread();
             if (value == null) {
                 field.set(thread, null);
-                LOG.debug("Restored {} to a null value", field.getName());
+                LOG.warn("Restored {} to a null value", field.getName());
             } else {
                 final Object threadLocals = field.get(thread);
                 tableField.set(threadLocals, value);
                 threadLocalMapSizeField.set(threadLocals, size);
                 threadLocalMapThresholdField.set(threadLocals, threshold);
-                LOG.debug("Restored {} with to {} references, size {}, threshold {}" ,field.getName(), value.length, size, threshold);
+                LOG.warn("Restored {} with to {} references, size {}, threshold {}" ,field.getName(), value.length, size, threshold);
             }
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Access denied", e);
