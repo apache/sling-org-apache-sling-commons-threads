@@ -32,8 +32,6 @@ import org.slf4j.LoggerFactory;
 public class ThreadLocalCleaner {
     
     private static final Logger LOG = LoggerFactory.getLogger(ThreadLocalCleaner.class);
-
-    private static final String CLEANUP_COUNTER = "commons.threads.tp.threadLocalCleanup";
     
     /* Reflection fields */
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
