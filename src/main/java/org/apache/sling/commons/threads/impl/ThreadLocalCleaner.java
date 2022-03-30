@@ -19,18 +19,21 @@ package org.apache.sling.commons.threads.impl;
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import org.apache.sling.commons.threads.impl.ThreadLocalChangeListener.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Notifies a {@link ThreadLocalChangeListener} about changes on a thread local storage. In addition it removes all references to variables
- * being added to the thread local storage while the cleaner was running with its {@link cleanup} method.
+ * being added to the thread local storage while the cleaner was running with its {@link #cleanup} method.
  * 
  * @see <a href="http://www.javaspecialists.eu/archive/Issue229.html">JavaSpecialist.eu - Cleaning ThreadLocals</a> */
 public class ThreadLocalCleaner {
     
     private static final Logger LOG = LoggerFactory.getLogger(ThreadLocalCleaner.class);
+
+    private static final String CLEANUP_COUNTER = "commons.threads.tp.threadLocalCleanup";
     
     /* Reflection fields */
     /** this field is in class {@link ThreadLocal} and is of type {@code ThreadLocal.ThreadLocalMap} */
@@ -48,6 +51,9 @@ public class ThreadLocalCleaner {
     private static final Field threadLocalMapSizeField;
     /** this field is in the class {@code ThreadLocal.ThreadLocalMap} and next resize threshold */
     private static final Field threadLocalMapThresholdField;
+
+    /** internal cache of thread ids, so we can keep track of which cleanup to log */
+    private static final Set<Long> cleanupLogCache = new ConcurrentSkipListSet<>();
 
     static  {
         try {
@@ -130,13 +136,13 @@ public class ThreadLocalCleaner {
             Thread thread = Thread.currentThread();
             if (value == null) {
                 field.set(thread, null);
-                LOG.warn("Restored {} to a null value", field.getName());
+                LOG.debug("Restored {} to a null value", field.getName());
             } else {
                 final Object threadLocals = field.get(thread);
                 tableField.set(threadLocals, value);
                 threadLocalMapSizeField.set(threadLocals, size);
                 threadLocalMapThresholdField.set(threadLocals, threshold);
-                LOG.warn("Restored {} with to {} references, size {}, threshold {}" ,field.getName(), value.length, size, threshold);
+                LOG.debug("Restored {} with to {} references, size {}, threshold {}" ,field.getName(), value.length, size, threshold);
             }
         } catch (IllegalAccessException e) {
             throw new IllegalStateException("Access denied", e);
@@ -149,6 +155,7 @@ public class ThreadLocalCleaner {
     
     public ThreadLocalCleaner(ThreadLocalChangeListener listener) {
         this.listener = listener;
+
         saveOldThreadLocals();
     }
 
@@ -159,6 +166,9 @@ public class ThreadLocalCleaner {
             diff(inheritableThreadLocalsField, inheritableThreadLocalsCopy.references);
         }
         restoreOldThreadLocals();
+        if(cleanupLogCache.add(Thread.currentThread().getId())) {
+            LOG.warn("Cleanup of thread locals performed for {}", Thread.currentThread());
+        }
     }
 
     /** Notifies the {@link ThreadLocalChangeListener} about changes on thread local variables for the current thread.

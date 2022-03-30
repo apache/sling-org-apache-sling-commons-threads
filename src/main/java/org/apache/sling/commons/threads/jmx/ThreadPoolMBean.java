@@ -149,6 +149,14 @@ public interface ThreadPoolMBean {
     int getShutdownWaitTimeMs();
 
     /**
+     * Return the amount of thread local cleanups performed
+     *
+     * @return the amount of thread local cleanups performed or -1 if the executor is null
+     *              or not of type {@link org.apache.sling.commons.threads.impl.ThreadPoolExecutorCleaningThreadLocals}
+     */
+    long getThreadLocalCleanupCount();
+
+    /**
      * Return whether or not the thread pool creates daemon threads.
      * 
      * @return The daemon configuration.

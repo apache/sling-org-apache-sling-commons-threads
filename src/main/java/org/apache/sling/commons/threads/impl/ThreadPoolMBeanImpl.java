@@ -17,10 +17,8 @@
 package org.apache.sling.commons.threads.impl;
 
 import java.util.concurrent.ThreadPoolExecutor;
-
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
-
 import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager.Entry;
 import org.apache.sling.commons.threads.jmx.ThreadPoolMBean;
 
@@ -95,6 +93,15 @@ class ThreadPoolMBeanImpl extends StandardMBean implements ThreadPoolMBean {
         final ThreadPoolExecutor tpe = this.entry.getExecutor();
         if ( tpe != null ) {
             return tpe.getTaskCount();
+        } else {
+            return -1;
+        }
+    }
+
+    public long getThreadLocalCleanupCount() {
+        final ThreadPoolExecutor tpe = this.entry.getExecutor();
+        if(tpe instanceof ThreadPoolExecutorCleaningThreadLocals) {
+            return ((ThreadPoolExecutorCleaningThreadLocals)tpe).getCleanupCounter();
         } else {
             return -1;
         }
