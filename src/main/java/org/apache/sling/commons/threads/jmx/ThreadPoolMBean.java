@@ -81,6 +81,14 @@ public interface ThreadPoolMBean {
      * @return the task count or -1 if the thread pool does not have an Executor
      */
     long getExecutorTaskCount();
+    
+    
+    /**
+     * Retrieve the number of tasks in the work queue of the pool's Executor. These are the
+     * tasks which have been already submitted to the threadpool, but which are not yet executed.
+     * @return the number of tasks in the work queue.
+     */
+    long getExcutorTasksInWorkQueueCount();
 
     /**
      * Return the configured max thread age.
