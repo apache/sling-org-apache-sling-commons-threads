@@ -110,17 +110,6 @@
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>8</id>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <jdkToolchain>
-                                        <version>1.8</version>
-                                    </jdkToolchain>
-                                </configuration>
-                            </execution>
-                            <execution>
                                 <id>11</id>
                                 <goals>
                                     <goal>test</goal>
