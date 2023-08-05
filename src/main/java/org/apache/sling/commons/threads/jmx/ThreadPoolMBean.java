@@ -76,7 +76,8 @@ public interface ThreadPoolMBean {
 
 
     /**
-     * Retrieve the task count from the pool's Executor.
+     * Retrieve the task count from the pool's Executor. This is the total number of tasks, which
+     * have ever been scheduled to this threadpool. They might have been processed yet or not.
      * 
      * @return the task count or -1 if the thread pool does not have an Executor
      */
@@ -86,7 +87,7 @@ public interface ThreadPoolMBean {
     /**
      * Retrieve the number of tasks in the work queue of the pool's Executor. These are the
      * tasks which have been already submitted to the threadpool, but which are not yet executed.
-     * @return the number of tasks in the work queue.
+     * @return the number of tasks in the work queue -1 if the thread pool does not have an Executor
      */
     long getExcutorTasksInWorkQueueCount();
 
