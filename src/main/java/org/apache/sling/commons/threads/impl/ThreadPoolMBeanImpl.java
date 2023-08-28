@@ -99,6 +99,15 @@ class ThreadPoolMBeanImpl extends StandardMBean implements ThreadPoolMBean {
             return -1;
         }
     }
+    
+    public long getExcutorTasksInWorkQueueCount() {
+        final ThreadPoolExecutor tpe = this.entry.getExecutor();
+        if ( tpe != null ) {
+            return tpe.getQueue().size();
+        } else {
+            return -1;
+        }
+    }
 
     @Deprecated
     public long getMaxThreadAge() {
