@@ -16,7 +16,7 @@
  */
 package org.apache.sling.commons.threads.impl;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +33,10 @@ class ThreadPoolMetricsGauges {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadPoolMetricsGauges.class);
 
-    // not exposing MaxThreadAge as bean.getMaxThreadAge() is deprecated due
+    // 1. not exposing MaxThreadAge as bean.getMaxThreadAge() is deprecated due
     // to SLING-6261 and always returns -1
-    private static final List<String> IGNORED_ATTRIBUTES = Collections.singletonList("MaxThreadAge");
+    // 2. not exposing Pid as it's many times empty and breaks exporting metrics, see SLING-12013
+    private static final List<String> IGNORED_ATTRIBUTES = Arrays.asList("MaxThreadAge", "Pid");
 
     private static final Map<Class<?>, Class<?>> WRAPPER_TO_PRIMITIVE = new HashMap<>();
 
