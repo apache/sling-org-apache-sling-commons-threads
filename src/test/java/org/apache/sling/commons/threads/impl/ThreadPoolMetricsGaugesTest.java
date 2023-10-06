@@ -88,7 +88,6 @@ public class ThreadPoolMetricsGaugesTest {
         when(bean.getMBeanInfo()).thenReturn(info);
         when(bean.getAttribute(eq(ATTR_A_NAME))).thenReturn(new Attributes().getA());
         when(bean.getAttribute(eq(ATTR_B_NAME))).thenReturn(new Attributes().getB());
-        when(bean.getAttribute(eq(ATTR_C_NAME))).thenReturn(new Attributes().getC());
         when(bean.getAttribute(eq(ATTR_D_NAME)))
                 .thenThrow(new JMRuntimeException("this exception is for unit test only"));
 
