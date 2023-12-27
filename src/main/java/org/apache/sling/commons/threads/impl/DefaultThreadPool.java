@@ -27,6 +27,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
@@ -154,7 +155,7 @@ public class DefaultThreadPool
                     handler,
                     new LoggingThreadLocalChangeListener());
         } catch (RuntimeException | Error e) {
-            logger.warn("Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '{}', fall back to regular ThreadPoolExecutor", e.getMessage(), e);
+            logThreadPoolExecutorCleaningThreadLocalsException(e);
             this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
                     this.configuration.getMaxPoolSize(),
                     this.configuration.getKeepAliveTime(),
@@ -164,6 +165,19 @@ public class DefaultThreadPool
                     handler);
         }
         this.logger.info("Thread pool [{}] initialized.", name);
+    }
+
+    private void logThreadPoolExecutorCleaningThreadLocalsException(Throwable t) {
+        Throwable rootCause = Stream.iterate(t, Throwable::getCause)
+                .filter(element -> element.getCause() == null)
+                .findFirst().orElse(t);
+        String msg = String.format(
+                "Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '{}', fall back to regular ThreadPoolExecutor.%n" +
+                "In most cases this can be fixed by using Java option \"--add-opens java.base/java.lang=org.apache.sling.commons.threads\".%n" +
+                "ThreadPoolExecutorCleaningThreadLocals is crucial to clean up thread locals in case application code missed to do that via ThreadLocal.remove()!",
+                rootCause.getMessage());
+        logger.warn(msg);
+        logger.debug("Cannot create ThreadPoolExecutorCleaningThreadLocals", t);
     }
 
     private static class LoggingThreadLocalChangeListener implements ThreadLocalChangeListener {
