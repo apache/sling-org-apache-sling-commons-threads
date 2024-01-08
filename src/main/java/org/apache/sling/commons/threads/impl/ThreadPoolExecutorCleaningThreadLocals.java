@@ -24,7 +24,6 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
     private final ThreadLocalChangeListener listener;
+
+    private long cleanupCounter = 0;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -68,8 +69,14 @@ public class ThreadPoolExecutorCleaningThreadLocals extends ThreadPoolExecutor {
 
         if (cleaner != null) {
             cleaner.cleanup();
+            this.cleanupCounter++;
+            LOGGER.debug("Cleanup of thread locals performed for thread {}", Thread.currentThread());
         } else {
             LOGGER.warn("Could not clean up thread locals in thread {} as the cleaner was not set up correctly", Thread.currentThread());
         }
+    }
+
+    public long getCleanupCounter() {
+        return this.cleanupCounter;
     }
 }
