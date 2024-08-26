@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.threads</artifactId>
-    <version>3.2.23-SNAPSHOT</version>
+    <version>3.3.0</version>
 
     <name>Apache Sling Commons Threads</name>
     <description>
@@ -39,7 +39,7 @@
         <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</connection>
         <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-commons-threads.git</developerConnection>
         <url>https://github.com/apache/sling-org-apache-sling-commons-threads.git</url>
-      <tag>HEAD</tag>
+      <tag>org.apache.sling.commons.threads-3.3.0</tag>
   </scm>
 
     <profiles>
@@ -207,6 +207,6 @@
     <properties>
         <sling.java.version>8</sling.java.version>
         <minimalJavaBuildVersion>9</minimalJavaBuildVersion>
-        <project.build.outputTimestamp>2021-08-06T09:01:40Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2024-08-26T07:52:57Z</project.build.outputTimestamp>
     </properties>
 </project>
