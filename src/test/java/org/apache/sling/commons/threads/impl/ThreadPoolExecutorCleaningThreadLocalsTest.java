@@ -24,9 +24,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
- import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.sling.commons.threads.impl.ThreadLocalChangeListener.Mode;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,8 +50,8 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(20);
         final RejectedExecutionHandler rejectionHandler = new ThreadPoolExecutor.AbortPolicy();
         pool = new ThreadPoolExecutorCleaningThreadLocals(
-                    1, 1, 100, TimeUnit.MILLISECONDS,
-                    queue, Executors.defaultThreadFactory(), rejectionHandler, listener);
+                1, 1, 100, TimeUnit.MILLISECONDS,
+                queue, Executors.defaultThreadFactory(), rejectionHandler, listener);
         Mockito.when(listener.isEnabled()).thenReturn(true);
     }
     
@@ -77,6 +76,14 @@ public class ThreadPoolExecutorCleaningThreadLocalsTest {
         Mockito.verify(listener).changed(ArgumentMatchers.eq(Mode.ADDED), ArgumentMatchers.any(Thread.class), ArgumentMatchers.eq(ThreadLocalTask.threadLocalVariable), ArgumentMatchers.eq("test"));
         // no thread locals should have been removed
         Mockito.verify(listener, Mockito.times(0)).changed(ArgumentMatchers.eq(Mode.REMOVED), ArgumentMatchers.any(Thread.class), ArgumentMatchers.eq(ThreadLocalTask.threadLocalVariable), ArgumentMatchers.anyString());
+    }
+
+    @Test(timeout = 10000)
+    public void testThreadLocalCleanupCount() {
+        pool.beforeExecute(Thread.currentThread(), null);
+        pool.afterExecute(Thread.currentThread(), null);
+        Assert.assertEquals(1, pool.getCleanupCounter());
+
     }
 
     private void assertTaskDoesNotSeeOldThreadLocals(String value) throws InterruptedException, ExecutionException {
