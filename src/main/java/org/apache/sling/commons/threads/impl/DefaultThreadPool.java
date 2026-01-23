@@ -172,7 +172,7 @@ public class DefaultThreadPool
                 .filter(element -> element.getCause() == null)
                 .findFirst().orElse(t);
         String msg = String.format(
-                "Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '{}', fall back to regular ThreadPoolExecutor.%n" +
+                "Unsupported JRE, cannot register ThreadPoolExecutorCleaningThreadLocals due to '%s', fall back to regular ThreadPoolExecutor.%n" +
                 "In most cases this can be fixed by using Java option \"--add-opens java.base/java.lang=org.apache.sling.commons.threads\".%n" +
                 "ThreadPoolExecutorCleaningThreadLocals is crucial to clean up thread locals in case application code missed to do that via ThreadLocal.remove()!",
                 rootCause.getMessage());
